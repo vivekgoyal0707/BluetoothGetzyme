@@ -20,12 +20,25 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -50,7 +63,7 @@ public class ChatActivity extends AppCompatActivity {
 
     Button btn_A, btn_B, btn_C;
     private boolean isPermissionGranted = false;
-
+    RequestQueue requestQueue;
 
 
     private Handler handler = new Handler(new Handler.Callback() {
@@ -63,7 +76,6 @@ public class ChatActivity extends AppCompatActivity {
                         case ChatService.STATE_CONNECTED:
                             setStatus(getString(R.string.title_connected_to,
                                     connectedDeviceName));
-
                             break;
                         case ChatService.STATE_CONNECTING:
                             setStatus(R.string.title_connecting);
@@ -83,33 +95,46 @@ public class ChatActivity extends AppCompatActivity {
 
                     String readMessage = new String(readBuf, 0, msg.arg1);
                     //chatArrayAdapter.add(connectedDeviceName + ":  " + readMessage);
-                    if(readMessage.equalsIgnoreCase(""+"A")){
-                        btn_A.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                btn_A.setBackgroundColor(Color.BLACK);
-                                btn_A.setTextColor(Color.WHITE);
-                            }
-                        },2000);
-                    }else if(readMessage.equalsIgnoreCase(""+"B")){
-                        btn_B.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                btn_B.setBackgroundColor(Color.BLACK);
-                                btn_B.setTextColor(Color.WHITE);
-                            }
-                        },2000);
-                    }else if(readMessage.equalsIgnoreCase(""+"C")){
-                        btn_C.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                btn_C.setBackgroundColor(Color.BLACK);
-                                btn_C.setTextColor(Color.WHITE);
-                            }
-                        },2000);
+
+                    if (readMessage.length() < 4) {
+                        final String substring = readMessage.substring(1);
+                        char btn_text = readMessage.charAt(0);
+
+                        if (btn_text == 'A') {
+                            btn_A.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    btn_A.setBackgroundColor(Color.BLACK);
+                                    btn_A.setTextColor(Color.WHITE);
+
+                                    getDataFromAPI(substring);
+                                }
+                            }, 2000);
+                        } else if (btn_text == 'B') {
+                            btn_B.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    btn_B.setBackgroundColor(Color.BLACK);
+                                    btn_B.setTextColor(Color.WHITE);
+                                    getDataFromAPI(substring);
+                                }
+                            }, 2000);
+                        } else if (btn_text == 'C') {
+                            btn_C.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    btn_C.setBackgroundColor(Color.BLACK);
+                                    btn_C.setTextColor(Color.WHITE);
+                                    getDataFromAPI(substring);
+                                }
+                            }, 2000);
+                        }
+                    } else{
+                        startActivity(new Intent(ChatActivity.this,MyDataActivity.class)
+                        .putExtra("KEY_STRING",readMessage));
                     }
                     break;
                 case MESSAGE_DEVICE_NAME:
@@ -130,14 +155,70 @@ public class ChatActivity extends AppCompatActivity {
         }
     });
 
+    private void getDataFromAPI(String substring) {
+
+        String url = getResources().getString(R.string.api_url) + substring;
+
+        //Log.e("URL", url);
+
+        /*final JsonObjectRequest mStringRequest = new JsonObjectRequest(Request.Method.GET, url, new Response.Listener<JSONObject>() {
+
+            @Override
+            public void onResponse(JSONObject response) {
+
+               // String responseData = response;
+
+                sendMessage(response.toString(), MESSAGE_WRITE);
+            }
+//
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+
+
+            }
+        }) {
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+
+                Map<String, String> params = new HashMap<>();
+                //params.put("Authorization", "Bearer " + accessToken);
+                return params;
+            }
+        };*/
+
+        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.GET,url,null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        System.out.println(response.toString());
+
+                        sendMessage(response.toString(), MESSAGE_WRITE);
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                });
+
+// Adding request to request queue
+        requestQueue.add(jsObjRequest);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        requestQueue = Volley.newRequestQueue(this);
 
         getWidgetReferences();
         bindEventHandler();
@@ -167,23 +248,38 @@ public class ChatActivity extends AppCompatActivity {
         btn_A.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String message = "A";
-                sendMessage(message,  MESSAGE_WRITE);
+                generateRandomNumberAndSendMessage(message);
+
             }
         });
 
         btn_B.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String message = "B";
-                sendMessage(message,  MESSAGE_WRITE);
+                generateRandomNumberAndSendMessage(message);
             }
         });
 
         btn_C.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String message = "C";
-                sendMessage(message,  MESSAGE_WRITE);
+                generateRandomNumberAndSendMessage(message);
+
+                // sendMessage(message,  MESSAGE_WRITE);
             }
         });
+    }
+
+    private void generateRandomNumberAndSendMessage(String message) {
+
+        Random r1 = new Random();
+        int number = r1.nextInt(13);
+        if (number < 10) {
+            generateRandomNumberAndSendMessage(message);
+        } else {
+            sendMessage(message + number, MESSAGE_WRITE);
+        }
+
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -323,7 +419,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     public void onStart() {
         super.onStart();
@@ -332,7 +427,7 @@ public class ChatActivity extends AppCompatActivity {
             Intent enableIntent = new Intent(
                     BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }else {
+        } else {
             if (chatService == null)
                 setupChat();
         }
