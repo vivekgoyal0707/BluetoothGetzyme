@@ -26,6 +26,8 @@ public class MyDataActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_data);
 
+
+
         Intent in = getIntent();
         data = in.getStringExtra("KEY_STRING");
         data = data.replaceAll("\\n","");

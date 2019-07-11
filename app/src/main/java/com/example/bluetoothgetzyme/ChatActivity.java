@@ -36,6 +36,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -65,6 +66,7 @@ public class ChatActivity extends AppCompatActivity {
     private boolean isPermissionGranted = false;
     RequestQueue requestQueue;
 
+    ArrayList<VerticalModel> vm;
 
     private Handler handler = new Handler(new Handler.Callback() {
 
@@ -135,6 +137,7 @@ public class ChatActivity extends AppCompatActivity {
                     } else{
                         startActivity(new Intent(ChatActivity.this,MyDataActivity.class)
                         .putExtra("KEY_STRING",readMessage));
+
                     }
                     break;
                 case MESSAGE_DEVICE_NAME:
@@ -196,6 +199,29 @@ public class ChatActivity extends AppCompatActivity {
                         System.out.println(response.toString());
 
                         sendMessage(response.toString(), MESSAGE_WRITE);
+
+                        //String response1 =  response.toString();
+                        //JSONObject jo = new JSONObject(response1);
+                       /* vm = new ArrayList<>();
+                        try{
+
+                            int a = response.length();
+
+                            for(int i=1 ; i<=a; i++){
+
+                                String re = response.getString(String.valueOf(i));
+                                Log.e(""+i,re);
+
+                                VerticalModel vvm = new VerticalModel(re);
+                                vm.add(vvm);
+
+                            }
+
+                            sendMessage(response.toString(), MESSAGE_WRITE);
+
+                        }catch (Exception e){
+                            Log.e("ABBB",e+"");
+                        }*/
 
                     }
                 },
@@ -272,12 +298,17 @@ public class ChatActivity extends AppCompatActivity {
 
     private void generateRandomNumberAndSendMessage(String message) {
 
-        Random r1 = new Random();
-        int number = r1.nextInt(13);
-        if (number < 10) {
-            generateRandomNumberAndSendMessage(message);
-        } else {
-            sendMessage(message + number, MESSAGE_WRITE);
+        try {
+            Random r1 = new Random();
+            int number = r1.nextInt(3) + 10;
+            if (number < 10) {
+                generateRandomNumberAndSendMessage(message);
+            } else {
+                sendMessage(message + number, MESSAGE_WRITE);
+            }
+        }catch (Exception e)
+        {
+            e.printStackTrace();
         }
 
     }
