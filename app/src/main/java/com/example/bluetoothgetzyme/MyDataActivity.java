@@ -9,11 +9,17 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MyDataActivity extends AppCompatActivity {
 
     String data;
 
     RecyclerView verticalRecyclerView;
+
+    ArrayList<VerticalModel> myArrayList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +33,8 @@ public class MyDataActivity extends AppCompatActivity {
         verticalRecyclerView = (RecyclerView)findViewById(R.id.verticalRecyclerView);
 
         verticalRecyclerView.setHasFixedSize(true);
-        verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
+        verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this,
+                LinearLayoutManager.VERTICAL, false));
 
 
         //.........Make Vertical Adapter.............//
@@ -36,9 +43,19 @@ public class MyDataActivity extends AppCompatActivity {
 
             JSONObject jsonObject = new JSONObject(data);
 
-            int a = jsonObject.length();
+            int listCount = jsonObject.length();
 
-            Log.e("ABC",jsonObject+"");
+
+            myArrayList = new ArrayList<>();
+            for(int i=1;i<=listCount;i++) {
+                String myData = jsonObject.getString(String.valueOf(i));
+                VerticalModel verticalModel = new VerticalModel(myData);
+                myArrayList.add(verticalModel);
+            }
+
+            VerticalRecyclerViewAdapter myAdapter = new VerticalRecyclerViewAdapter(MyDataActivity.this,
+                    myArrayList);
+            verticalRecyclerView.setAdapter(myAdapter);
 
 
         }catch (Exception e){
